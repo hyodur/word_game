@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ 2단계 초성 퀴즈 ✨</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    /* 통통 튀는 애니메이션 */
+    @keyframes bounce-subtle {
+      0%, 100% { transform: translateY(-5%); }
+      50% { transform: translateY(0); }
+    }
+    .animate-bounce-subtle { animation: bounce-subtle 2s infinite; }
+    
+    /* 칭찬 배지 팝업 애니메이션 */
+    @keyframes popIn {
+      0% { transform: scale(0); opacity: 0; }
+      80% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop-in { animation: popIn 0.5s ease-out forwards; }
+    
+    @keyframes spinSlow { 100% { transform: rotate(360deg); } }
+    .spin-slow { animation: spinSlow 4s linear infinite; }
+  </style>
+</head>
+<body class="bg-orange-50 font-sans touch-manipulation">
+  <div id="app" class="flex flex-col items-center justify-center min-h-screen p-4"></div>
+
+  <script>
+    // --- 단어장 (총 100개 꽉 채웠습니다!) ---
+    const wordList = [
+      // 1. 동물과 자연 (25)
+      { word: '사자', initial: 'ㅅㅈ', image: '🦁' }, { word: '토끼', initial: 'ㅌㄲ', image: '🐰' },
+      { word: '거북이', initial: 'ㄱㅂㅇ', image: '🐢' }, { word: '코끼리', initial: 'ㅋㅋㄹ', image: '🐘' },
+      { word: '기린', initial: 'ㄱㄹ', image: '🦒' }, { word: '원숭이', initial: 'ㅇㅅㅇ', image: '🐵' },
+      { word: '돼지', initial: 'ㄷㅈ', image: '🐷' }, { word: '병아리', initial: 'ㅂㅇㄹ', image: '🐥' },
+      { word: '나비', initial: 'ㄴㅂ', image: '🦋' }, { word: '호랑이', initial: 'ㅎㄹㅇ', image: '🐯' },
+      { word: '강아지', initial: 'ㄱㅇㅈ', image: '🐶' }, { word: '고양이', initial: 'ㄱㅇㅇ', image: '🐱' },
+      { word: '판다', initial: 'ㅍㄷ', image: '🐼' }, { word: '여우', initial: 'ㅇㅇ', image: '🦊' },
+      { word: '늑대', initial: 'ㄴㄷ', image: '🐺' }, { word: '사슴', initial: 'ㅅㅅ', image: '🦌' },
+      { word: '다람쥐', initial: 'ㄷㄹㅈ', image: '🐿️' }, { word: '하마', initial: 'ㅎㅁ', image: '🦛' },
+      { word: '악어', initial: 'ㅇㅇ', image: '🐊' }, { word: '도마뱀', initial: 'ㄷㅁㅂ', image: '🦎' },
+      { word: '개구리', initial: 'ㄱㄱㄹ', image: '🐸' }, { word: '오리', initial: 'ㅇㄹ', image: '🦆' },
+      { word: '펭귄', initial: 'ㅍㄱ', image: '🐧' }, { word: '독수리', initial: 'ㄷㅅㄹ', image: '🦅' },
+      { word: '부엉이', initial: 'ㅂㅇㅇ', image: '🦉' },
+      
+      // 2. 과일과 음식 (25)
+      { word: '사과', initial: 'ㅅㄱ', image: '🍎' }, { word: '포도', initial: 'ㅍㄷ', image: '🍇' },
+      { word: '바나나', initial: 'ㅂㄴㄴ', image: '🍌' }, { word: '수박', initial: 'ㅅㅂ', image: '🍉' },
+      { word: '딸기', initial: 'ㄸㄱ', image: '🍓' }, { word: '우유', initial: 'ㅇㅇ', image: '🥛' },
+      { word: '피자', initial: 'ㅍㅈ', image: '🍕' }, { word: '김밥', initial: 'ㄱㅂ', image: '🍙' },
+      { word: '사탕', initial: 'ㅅㅌ', image: '🍬' }, { word: '복숭아', initial: 'ㅂㅅㅇ', image: '🍑' },
+      { word: '한라봉', initial: 'ㅎㄹㅂ', image: '🍊' }, { word: '자두', initial: 'ㅈㄷ', image: '🍑' },
+      { word: '레몬', initial: 'ㄹㅁ', image: '🍋' }, { word: '오렌지', initial: 'ㅇㄹㅈ', image: '🍊' },
+      { word: '햄버거', initial: 'ㅎㅂㄱ', image: '🍔' }, { word: '아이스크림', initial: 'ㅇㅇㅅㅋㄹ', image: '🍦' },
+      { word: '과자', initial: 'ㄱㅈ', image: '🍪' }, { word: '초콜릿', initial: 'ㅊㅋㄹ', image: '🍫' },
+      { word: '샌드위치', initial: 'ㅅㄷㅇㅊ', image: '🥪' }, { word: '치즈', initial: 'ㅊㅈ', image: '🧀' },
+      { word: '옥수수', initial: 'ㅇㅅㅅ', image: '🌽' }, { word: '고구마', initial: 'ㄱㄱㅁ', image: '🍠' },
+      { word: '감자', initial: 'ㄱㅈ', image: '🥔' }, { word: '당근', initial: 'ㄷㄱ', image: '🥕' },
+      { word: '오이', initial: 'ㅇㅇ', image: '🥒' },
+      
+      // 3. 생활과 학용품 (25)
+      { word: '우산', initial: 'ㅇㅅ', image: '☂️' }, { word: '가방', initial: 'ㄱㅂ', image: '🎒' },
+      { word: '자전거', initial: 'ㅈㅈㄱ', image: '🚲' }, { word: '비행기', initial: 'ㅂㅎㄱ', image: '✈️' },
+      { word: '경찰차', initial: 'ㄱㅊㅊ', image: '🚓' }, { word: '컴퓨터', initial: 'ㅋㅍㅌ', image: '💻' },
+      { word: '피아노', initial: 'ㅍㅇㄴ', image: '🎹' }, { word: '시계', initial: 'ㅅㄱ', image: '⌚' },
+      { word: '안경', initial: 'ㅇㄱ', image: '👓' }, { word: '모자', initial: 'ㅁㅈ', image: '🧢' },
+      { word: '양말', initial: 'ㅇㅁ', image: '🧦' }, { word: '신발', initial: 'ㅅㅂ', image: '👟' },
+      { word: '연필', initial: 'ㅇㅍ', image: '✏️' }, { word: '침대', initial: 'ㅊㄷ', image: '🛏️' },
+      { word: '지우개', initial: 'ㅈㅇㄱ', image: '🖍️' }, { word: '공책', initial: 'ㄱㅊ', image: '📓' },
+      { word: '가위', initial: 'ㄱㅇ', image: '✂️' }, { word: '치약', initial: 'ㅊㅇ', image: '🪥' },
+      { word: '필통', initial: 'ㅍㅌ', image: '🖊️' }, { word: '크레파스', initial: 'ㅋㄹㅍㅅ', image: '🖍️' },
+      { word: '책상', initial: 'ㅊㅅ', image: '🪑' }, { word: '의자', initial: 'ㅇㅈ', image: '🪑' },
+      { word: '칠판', initial: 'ㅊㅍ', image: '🏫' }, { word: '휴지', initial: 'ㅎㅈ', image: '🧻' },
+      { word: '거울', initial: 'ㄱㅇ', image: '🪞' },
+      
+      // 4. 장소와 풍경 (25)
+      { word: '무궁화', initial: 'ㅁㄱㅎ', image: '🌸' }, { word: '바다', initial: 'ㅂㄷ', image: '🌊' },
+      { word: '무지개', initial: 'ㅁㅈㄱ', image: '🌈' }, { word: '해바라기', initial: 'ㅎㅂㄹㄱ', image: '🌻' },
+      { word: '하늘', initial: 'ㅎㄴ', image: '☁️' }, { word: '구름', initial: 'ㄱㄹ', image: '☁️' },
+      { word: '태양', initial: 'ㅌㅇ', image: '☀️' }, { word: '보름달', initial: 'ㅂㄹㄷ', image: '🌕' },
+      { word: '은하수', initial: 'ㅇㅎㅅ', image: '🌌' }, { word: '나무', initial: 'ㄴㅁ', image: '🌳' },
+      { word: '장미', initial: 'ㅈㅁ', image: '🌹' }, { word: '백두산', initial: 'ㅂㄷㅅ', image: '⛰️' },
+      { word: '호수', initial: 'ㅎㅅ', image: '🏞️' }, { word: '우주', initial: 'ㅇㅈ', image: '🚀' },
+      { word: '놀이터', initial: 'ㄴㅇㅌ', image: '🛝' }, { word: '병원', initial: 'ㅂㅇ', image: '🏥' },
+      { word: '경찰서', initial: 'ㄱㅊㅅ', image: '🚓' }, { word: '소방서', initial: 'ㅅㅂㅅ', image: '🚒' },
+      { word: '우체국', initial: 'ㅇㅊㄱ', image: '📮' }, { word: '도서관', initial: 'ㄷㅅㄱ', image: '📚' },
+      { word: '수영장', initial: 'ㅅㅇㅈ', image: '🏊' }, { word: '동물원', initial: 'ㄷㅁㅇ', image: '🦁' },
+      { word: '공원', initial: 'ㄱㅇ', image: '🌳' }, { word: '가족', initial: 'ㄱㅈ', image: '👪' },
+      { word: '친구', initial: 'ㅊㄱ', image: '👬' }
+    ];
+
+    // --- 게임 상태 관리 ---
+    let gameState = 'start'; 
+    let score = 0;
+    let questionCount = 0;
+    const maxQuestions = 10; 
+    let currentProblem = null;
+    let showHint = false;
+    let feedback = null;
+    
+    // 배지 획득 여부 관리
+    let earnedBadges = { 100: false, 300: false, 500: false };
+    let showingBadgePopup = null; // 팝업창 띄울 점수 저장용
+
+    const appDiv = document.getElementById('app');
+
+    // --- 문제 생성 로직 ---
+    function generateProblem() {
+      const targetIndex = Math.floor(Math.random() * wordList.length);
+      currentProblem = wordList[targetIndex];
+      showHint = false;
+      feedback = null;
+      showingBadgePopup = null;
+    }
+
+    // --- 이벤트 핸들러 ---
+    window.startGame = function() {
+      score = 0;
+      questionCount = 0;
+      earnedBadges = { 100: false, 300: false, 500: false };
+      gameState = 'playing';
+      generateProblem();
+      render();
+    };
+
+    window.continueGame = function() {
+      questionCount = 0;
+      gameState = 'playing';
+      generateProblem();
+      render();
+    };
+
+    window.revealHint = function() {
+      showHint = true;
+      render();
+      setTimeout(() => document.getElementById('answerInput')?.focus(), 50);
+    };
+
+    window.checkAnswer = function() {
+      if (feedback !== null || showingBadgePopup !== null) return;
+
+      const inputEl = document.getElementById('answerInput');
+      const userAnswer = inputEl.value.trim().replace(/\s+/g, ''); 
+
+      if (userAnswer === "") return; 
+
+      if (userAnswer === currentProblem.word) {
+        feedback = 'correct';
+        let earnedPoints = showHint ? 5 : 10;
+        score += earnedPoints; 
+        
+        // 칭찬 배지 검사 로직 (목표 점수 도달 시 팝업 띄우기)
+        if (score >= 500 && !earnedBadges[500]) {
+          earnedBadges[500] = true;
+          showingBadgePopup = 500;
+        } else if (score >= 300 && !earnedBadges[300]) {
+          earnedBadges[300] = true;
+          showingBadgePopup = 300;
+        } else if (score >= 100 && !earnedBadges[100]) {
+          earnedBadges[100] = true;
+          showingBadgePopup = 100;
+        }
+
+        render(); // 맞춘 효과 및 팝업 그려주기
+
+        // 팝업이 뜨면 3.5초 감상, 아니면 1.5초 후 다음 문제로
+        setTimeout(() => {
+          showingBadgePopup = null; 
+          
+          if (questionCount + 1 >= maxQuestions) {
+            gameState = 'end';
+          } else {
+            questionCount++;
+            generateProblem();
+          }
+          render();
+        }, showingBadgePopup ? 3500 : 1500); 
+
+      } else {
+        feedback = 'wrong';
+        render();
+        
+        setTimeout(() => {
+          feedback = null;
+          render();
+          setTimeout(() => {
+            const resetInput = document.getElementById('answerInput');
+            if(resetInput) {
+              resetInput.value = '';
+              resetInput.focus();
+            }
+          }, 50);
+        }, 1000);
+      }
+    };
+
+    // --- 화면 그리기 로직 ---
+    function render() {
+      if (gameState === 'start') {
+        document.body.className = "bg-orange-50 font-sans touch-manipulation";
+        appDiv.innerHTML = `
+          <div class="bg-white p-8 rounded-3xl shadow-xl text-center max-w-md w-full border-4 border-orange-200">
+            <h1 class="text-4xl font-black text-orange-500 mb-4 break-keep">🔍 초성 퀴즈 대결!</h1>
+            <p class="text-lg text-gray-600 mb-4 break-keep">초성만 보고 어떤 단어인지 맞혀볼까요?</p>
+            <div class="bg-orange-100 rounded-xl p-4 mb-8 text-sm text-orange-800 text-left">
+              <p>🎯 <b>점수 규칙:</b></p>
+              <p>• 그림 힌트 없이 맞히면: <b>+10점</b></p>
+              <p>• 그림 힌트 보고 맞히면: <b>+5점</b></p>
+              <p class="mt-2 text-red-500 font-bold">🏆 100점, 300점, 500점을 달성해 보세요!</p>
+            </div>
+            <button onclick="startGame()" class="flex items-center justify-center w-full bg-orange-500 hover:bg-orange-600 text-white text-2xl font-bold py-4 px-8 rounded-2xl shadow-lg transition transform hover:scale-105 active:scale-95">
+              ▶️ 게임 시작!
+            </button>
+          </div>
+        `;
+      } else if (gameState === 'playing') {
+        document.body.className = "bg-yellow-50 font-sans touch-manipulation";
+        
+        // 정답 피드백 오버레이
+        let feedbackOverlay = '';
+        if (feedback === 'correct' && !showingBadgePopup) {
+          feedbackOverlay = `<div class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 rounded-2xl z-10">
+                               <span class="text-8xl animate-bounce">⭕</span>
+                               <span class="text-3xl font-bold text-green-500 mt-4">+${showHint ? '5' : '10'}점!</span>
+                             </div>`;
+        } else if (feedback === 'wrong') {
+          feedbackOverlay = `<div class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 rounded-2xl z-10">
+                               <span class="text-8xl">❌</span>
+                               <span class="text-3xl font-bold text-red-500 mt-4">다시 생각해보세요!</span>
+                             </div>`;
+        }
+
+        // 칭찬 배지 팝업 오버레이 (화면 전체를 덮음)
+        let badgeOverlay = '';
+        if (showingBadgePopup) {
+          badgeOverlay = `
+            <div class="fixed inset-0 flex flex-col items-center justify-center bg-black/60 z-50 animate-pop-in px-4">
+              <div class="bg-white p-10 rounded-3xl text-center shadow-2xl border-8 border-yellow-400 relative overflow-hidden max-w-sm w-full">
+                <div class="absolute inset-0 bg-yellow-100 opacity-50 spin-slow border-dashed border-4 border-yellow-300 rounded-full scale-150" style="z-index: 0;"></div>
+                <div class="relative z-10">
+                  <div class="text-8xl mb-4 animate-bounce">🏆</div>
+                  <h2 class="text-4xl font-black text-orange-500 mb-2">축하합니다!</h2>
+                  <p class="text-3xl font-bold text-gray-800">${showingBadgePopup}점 돌파!</p>
+                  <p class="text-xl text-gray-600 mt-4">정말 대단한 실력이에요!</p>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+
+        appDiv.innerHTML = `
+          ${badgeOverlay}
+          <div class="w-full max-w-md">
+            <div class="flex justify-between items-center mb-6 px-2">
+              <div class="flex items-center bg-white px-4 py-2 rounded-full shadow-sm border-2 border-orange-200">
+                <span class="text-2xl mr-2">🎯</span>
+                <span class="text-xl font-bold text-gray-700">${score}</span>
+              </div>
+              <div class="text-lg font-bold text-gray-500 bg-white px-4 py-2 rounded-full shadow-sm border-2 border-gray-200">
+                ${questionCount + 1} / ${maxQuestions}
+              </div>
+            </div>
+
+            <div class="bg-white p-8 rounded-3xl shadow-lg text-center mb-6 border-4 border-yellow-300 relative min-h-[250px] flex flex-col items-center justify-center overflow-hidden">
+              ${feedbackOverlay}
+              <div class="text-7xl font-black text-gray-800 tracking-widest mb-4">
+                ${currentProblem.initial}
+              </div>
+              
+              <div class="h-24 flex items-center justify-center">
+                ${showHint 
+                  ? `<div class="text-7xl animate-bounce-subtle">${currentProblem.image}</div>` 
+                  : `<button onclick="revealHint()" class="bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold py-2 px-6 rounded-full border-2 border-blue-300 transition animate-bounce-subtle">❓ 그림 힌트 보기</button>`
+                }
+              </div>
+            </div>
+
+            <div class="flex flex-col space-y-3">
+              <input type="text" id="answerInput" placeholder="정답을 입력하세요"
+                     class="w-full text-center text-3xl font-bold py-4 rounded-2xl border-4 border-orange-200 focus:outline-none focus:border-orange-500 shadow-inner bg-white"
+                     onkeypress="if(event.key==='Enter') checkAnswer()"
+                     autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" 
+                     ${showingBadgePopup ? 'disabled' : ''} />
+              <button onclick="checkAnswer()" class="w-full bg-orange-500 hover:bg-orange-600 text-white text-2xl font-bold py-4 rounded-2xl shadow-md transition transform active:scale-95" ${showingBadgePopup ? 'disabled' : ''}>
+                정답 확인!
+              </button>
+            </div>
+          </div>
+        `;
+        
+        if (!showingBadgePopup && feedback === null) {
+          setTimeout(() => document.getElementById('answerInput')?.focus(), 100);
+        }
+
+      } else if (gameState === 'end') {
+        document.body.className = "bg-green-50 font-sans touch-manipulation";
+        appDiv.innerHTML = `
+          <div class="bg-white p-8 rounded-3xl shadow-xl text-center max-w-md w-full border-4 border-green-300">
+            <div class="text-7xl mb-4 animate-bounce">🎉</div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">퀴즈 완료!</h1>
+            <p class="text-2xl text-gray-600 mb-6">나의 누적 점수는?</p>
+            <div class="text-7xl font-black text-orange-500 mb-8">${score} 점</div>
+            <div class="flex flex-col space-y-3">
+              <button onclick="continueGame()" class="flex items-center justify-center w-full bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold py-4 rounded-2xl shadow-lg transition transform hover:scale-105 active:scale-95">
+                ➕ 점수 이어서 더 풀기
+              </button>
+              <button onclick="startGame()" class="flex items-center justify-center w-full bg-gray-400 hover:bg-gray-500 text-white text-xl font-bold py-3 rounded-2xl shadow-md transition transform hover:scale-105 active:scale-95">
+                🔄 0점부터 새로 하기
+              </button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>
